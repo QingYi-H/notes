@@ -39,6 +39,7 @@ jobs:
             --exclude='.obsidian/' \
             --exclude='.trash/' \
             --exclude='密码/' \
+            --exclude='题库/' \
             --exclude='服务器地址.md' \
             --exclude='使用说明.md' \
             --exclude='index.md' \
