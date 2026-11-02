@@ -1,0 +1,72 @@
+name: Build and Deploy Notes
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # 私有笔记库更新不会触发本仓库，所以定时拉取
+  schedule:
+    - cron: "0 * * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出站点项目
+        uses: actions/checkout@v4
+
+      - name: 检出私有笔记库（只读 deploy key）
+        uses: actions/checkout@v4
+        with:
+          repository: QingYi-H/obsidian-vault
+          ssh-key: ${{ secrets.VAULT_DEPLOY_KEY }}
+          path: vault
+
+      - name: 同步笔记到 content
+        run: |
+          set -e
+          rsync -a --delete \
+            --exclude='.git/' \
+            --exclude='.obsidian/' \
+            --exclude='.trash/' \
+            --exclude='密码/' \
+            --exclude='服务器地址.md' \
+            --exclude='index.md' \
+            vault/ content/
+          echo "=== 本次发布包含的文件 ==="
+          find content -type f -not -path '*/.*' | sort
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建站点
+        run: npx quartz build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
