@@ -22,10 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 检出站点项目
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 检出私有笔记库（只读 deploy key）
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: QingYi-H/obsidian-vault
           ssh-key: ${{ secrets.VAULT_DEPLOY_KEY }}
@@ -45,7 +45,7 @@ jobs:
           echo "=== 本次发布包含的文件 ==="
           find content -type f -not -path '*/.*' | sort
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -56,7 +56,7 @@ jobs:
       - name: 构建站点
         run: node ./quartz/bootstrap-cli.mjs build
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: public
 
@@ -69,4 +69,4 @@ jobs:
     steps:
       - name: 部署到 GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
